@@ -1,0 +1,325 @@
+﻿@model Project_Kanban.Models.Project
+
+@{
+    ViewBag.Title = "Table_Project";
+    Layout = "~/Views/Layout/Template_Kanban.cshtml";
+}
+
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Project</h1>
+    <button class="btn btn-primary" data-toggle="modal" data-target="#myModal" onclick="ClearScreen();"><i class="fa fa-plus"> Add Project</i></button> <a class="btn btn-primary" href="@Url.Action("Index","Module")"><i class="fa fa-eye"> View Module</i></a>
+
+    <!-- DataTales -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Table Project</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="table_project" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>No. </th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Start_Date</th>
+                            <th>Due_Date</th>
+                            <th>Requirment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tfoot>
+                        <tr>
+                            <th>No. </th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Start_Date</th>
+                            <th>Due_Date</th>
+                            <th>Requirment</th>
+                            <th>Action</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.container-fluid -->
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h4 class="modal-title" id="myModalLabel">Project Form</h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="form-control" id="ProjectIdText" placeholder="Id" />
+                <div iv class="form-group">
+                    <label for="Name">Name</label>
+                    <input type="text" class="form-control" id="ProjectNameText" placeholder="Name">
+                </div>
+                <div iv class="form-group">
+                    <label for="Status">Status</label>
+                    <select class="form-control" id="ProjectStatusText">
+                        <option value="OnProgress">OnProgress</option>
+                        <option value="Done">Done</option>
+                        <option value="Failed">Failed</option>
+                    </select>
+                </div>
+                <div iv class="form-group">
+                    <label for="Name">Start Date</label>
+                    <input type="date" class="form-control" id="ProjectStartDateText" placeholder="Start Date">
+                </div>
+                <div iv class="form-group">
+                    <label for="Name">Due Date</label>
+                    <input type="date" class="form-control" id="ProjectDueDateText" placeholder="Due Date">
+                </div>
+                <div iv class="form-group">
+                    <label for="Status">Requirment</label>
+                    <input type="text" class="form-control" id="ProjectRequirmentText" placeholder="Requirment">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="Save" onclick="Validation();">Add</button>
+                <button type="button" class="btn btn-primary" id="Update" onclick="Validation();">Update</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+
+@section scripts{
+    <!-- Bootstrap core JavaScript-->
+    <script src="~/Asset/vendor/jquery/jquery.min.js"></script>
+    <script src="~/Asset/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="~/Asset/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="~/Asset/js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="~/Asset/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/Asset/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="~/Asset/js/demo/datatables-demo.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+
+    <script>
+
+        $(document).ready(function () {
+            var t = $("#table_project").DataTable({
+                "ajax": {
+                    "url": "/Project/List",
+                    "type": "GET",
+                    "datatype": "json"
+                },
+                "columns": [
+                    { "data": null },
+                    { "data": "Name" },
+                    { "data": "Status" },
+                    {
+                        "data": "Start_Date", "render": function (d) {
+                            return moment(d).format('DD/MM/YYYY');
+                        }
+                    },
+                    {
+                        "data": "Due_Date", "render": function (d) {
+                            return moment(d).format('DD/MM/YYYY');
+                        }
+                    },
+                    { "data": "Requirment" },
+                    {
+                        "render": function (data, type, row, meta) {
+                            return "<a data-toggle='tooltip' data-placement='left' title='Edit' class='btn btn-primary' onclick=GetById('" + row.Id + "');><i class='fa fa-pencil' style='color: white'></i></a> <a data-toggle='tooltip' data-placement='right' title='Delete' class='btn btn-danger' onclick=Delete('" + row.Id + "');><i class='fa fa-trash' style='color: white'></i></a>";
+                        }
+                    }
+                ],
+                 "columnDefs": [{
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": 0
+                }],
+                "order": [[1, 'asc']]
+            });
+            t.on('order.dt search.dt', function () {
+                t.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }).draw();
+        });
+
+        function Delete(Id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        "url": "/Project/Delete/",
+                        "datatype": "json",
+                        "data": { Id: Id }
+                    }).then((result) => {
+                        if (result.data[0] != 0) {
+                            Swal.fire(
+                                'Success!',
+                                'Your file has been deleted.',
+                                'success'
+                            ).then(() => {
+                                $('#table_project').DataTable().ajax.reload();
+                            })
+                        }
+                        else {
+                            Swal.fire(
+                                'Failed!',
+                                'Your file not deleted.',
+                                'failed'
+                            ).then(() => {
+                                $('#table_project').DataTable().ajax.reload();
+                            })
+                        }
+                        $("#myModal").modal('hide');
+                    })
+                }
+            })
+        }
+
+        function Edit(Id) {
+            var project = new Object();
+            project.Id = $("#ProjectIdText").val();
+            project.Name = $("#ProjectNameText").val();
+            project.Status = $("#ProjectStatusText").val();
+            project.Start_Date = $("#ProjectStartDateText").val();
+            project.Due_Date = $("#ProjectDueDateText").val();
+            project.Requirment = $("#ProjectRequirmentText").val();
+            $.ajax({
+                "url": "/Project/Edit/",
+                "type": "POST",
+                "datatype": "json",
+                "data": { Id: project.Id, Name: project.Name, Status: project.Status, Start_Date: project.Start_Date, Due_Date: project.Due_Date, Requirment: project.Requirment }
+            }).then((result) => {
+                if (result.data != 0) {
+                    Swal.fire(
+                        'Success!',
+                        'Your file has been updated.',
+                        'success'
+                    ).then(() => {
+                        $('#table_project').DataTable().ajax.reload();
+                    })
+                }
+                else {
+                    Swal.fire(
+                        'Failed!',
+                        'Your file not updated.',
+                        'failed'
+                    ).then(() => {
+                        $('#table_project').DataTable().ajax.reload();
+                    })
+                }
+                $("#myModal").modal('hide');
+            })
+        }
+
+        function Save() {
+            var project = new Object();
+            project.Name = $("#ProjectNameText").val();
+            project.Status = $("#ProjectStatusText").val();
+            project.Start_Date = $("#ProjectStartDateText").val();
+            project.Due_Date = $("#ProjectDueDateText").val();
+            project.Requirment = $("#ProjectRequirmentText").val();
+            $.ajax({
+                "url": "/Project/Create/",
+                "type": "POST",
+                "datatype": "json",
+                "data": project
+            }).then((result) => {
+                if (result.data[0] != 0) {
+                    Swal.fire(
+                        'Success!',
+                        'Your file has been inserted.',
+                        'success'
+                    ).then(() => {
+                        $('#table_project').DataTable().ajax.reload();
+                    })
+                }
+                else {
+                    Swal.fire(
+                        'Failed!',
+                        'Your file not inserted.',
+                        'failed'
+                    ).then(() => {
+                        $('#table_project').DataTable().ajax.reload();
+                    })
+                }
+                $("#myModal").modal('hide');
+            })
+        }
+
+        function GetById(Id) {
+            $.ajax({
+                "url": "/Project/GetById/" + Id,
+                "type": "GET",
+                "datatype": "json",
+                "data": { Id: Id }
+            }).then((result) => {
+                debugger
+                var start = moment(result.data.Start_Date).format('DD/MM/YYYY')
+
+                if (result.data != null) {
+                    $("#ProjectIdText").val(result.data.Id);
+                    $("#ProjectNameText").val(result.data.Name);
+                    $("#ProjectStatusText").val(result.data.Status);
+                    $("#ProjectStartDateText").val(result.data.Start_Date);
+                    $("#ProjectDueDateText").val(result.data.Due_Date);
+                    $("#ProjectRequirmentText").val(result.data.Requirment);
+
+                    $("#myModal").modal('show');
+                    $("#Update").show();
+                    $("#Save").hide();
+                }
+            });
+        }
+
+        function ClearScreen() {
+            $("#ProjectNameText").val('');
+            $("#ProjectStatusText").val('');
+            $("#ProjectStartDateText").val('');
+            $("#ProjectDueDateText").val('');
+            $("#ProjectRequirmentText").val('');
+            $('#Update').hide();
+        }
+
+        function Validation() {
+            if ($("#ProjectNameText").val() == "" || $("#ProjectNameText").val == " ") {
+                Swal.fire(
+                    'Failed!',
+                    'Oops',
+                    'failed'
+                );
+            }
+            else if ($("#ProjectIdText").val() == "" || $("#ProjectIdText").val == " ") {
+                Save();
+            }
+            else {
+                Edit($("#ProjectIdText").val())
+            }
+        }
+
+    </script>
+}
